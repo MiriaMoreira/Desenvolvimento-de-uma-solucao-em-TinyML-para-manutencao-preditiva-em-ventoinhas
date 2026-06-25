@@ -3,15 +3,7 @@
 /* Includes ---------------------------------------------------------------- */
 #include <miria-project-1_inferencing.h>
 
-// ==========================================================
-// HEADER GERADO PELO PYTHON
-// ==========================================================
-
 #include "C:/Users/miria/Documents/UFAL/TCC/codigos/amostras_validacao.h"
-
-// ==========================================================
-// LISTA DE ÁUDIOS
-// ==========================================================
 
 #define TOTAL_DE_AUDIOS 20
 
@@ -61,32 +53,18 @@ static const int16_t* LISTA_DE_AMOSTRAS[TOTAL_DE_AUDIOS] = {
     abnormal_20
 };
 
-// ==========================================================
-// PONTEIRO GLOBAL
-// ==========================================================
-
 static const int16_t* AMOSTRA_SELECIONADA =
     LISTA_DE_AMOSTRAS[0];
 
-// ==========================================================
-// CONFIGURAÇÕES
-// ==========================================================
-
 static bool debug_nn = false;
-
-// ==========================================================
-// FUNÇÃO DE LEITURA PARA O EDGE IMPULSE
-// ==========================================================
 
 static int obter_dados_audio_estatico(
     size_t offset,
     size_t length,
     float *out_ptr)
 {
-    // ------------------------------------------------------
-    // Converte int16 -> float automaticamente
-    // ------------------------------------------------------
 
+    //Converte int16 -> float
     numpy::int16_to_float(
         &AMOSTRA_SELECIONADA[offset],
         out_ptr,
@@ -96,31 +74,19 @@ static int obter_dados_audio_estatico(
     return 0;
 }
 
-// ==========================================================
-// SETUP
-// ==========================================================
-
 void setup()
 {
     Serial.begin(115200);
 
     while (!Serial);
 
-    // ------------------------------------------------------
-    // "LIMPA" O MONITOR SERIAL
-    // ------------------------------------------------------
-
     for (int i = 0; i < 30; i++) {
         Serial.println();
     }
 
     Serial.println("====================================");
-    Serial.println("EDGE IMPULSE - VALIDACAO EM HARDWARE");
+    Serial.println("Validacao on-device");
     Serial.println("====================================");
-
-    // ------------------------------------------------------
-    // DIAGNÓSTICO DO MODELO
-    // ------------------------------------------------------
 
     ei_printf(
         "EI_CLASSIFIER_FREQUENCY: %d\n",
@@ -140,22 +106,11 @@ void setup()
     Serial.println("====================================");
 }
 
-// ==========================================================
-// LOOP
-// ==========================================================
-
 void loop()
 {
-    // ------------------------------------------------------
-    // PROCESSA TODOS OS ÁUDIOS
-    // ------------------------------------------------------
+    // Processa todos os áudios
 
     for (int i = 0; i < TOTAL_DE_AUDIOS; i++) {
-
-        // --------------------------------------------------
-        // SELECIONA ÁUDIO
-        // --------------------------------------------------
-
         AMOSTRA_SELECIONADA =
             LISTA_DE_AMOSTRAS[i];
 
@@ -164,50 +119,23 @@ void loop()
         ei_printf("PROCESSANDO AUDIO [%d]\n", i);
         ei_printf("====================================\n");
 
-        // --------------------------------------------------
-        // DIAGNÓSTICO DE ENERGIA
-        // --------------------------------------------------
-
-        int16_t maximo = 0;
-
         for (int j = 0;
              j < QUANTIDADE_AMOSTRAS;
              j++)
         {
-            int16_t v =
-                abs(AMOSTRA_SELECIONADA[j]);
-
-            if (v > maximo) {
-                maximo = v;
-            }
+            int16_t v = abs(AMOSTRA_SELECIONADA[j]);
         }
-
-        ei_printf(
-            "Amplitude maxima: %d\n",
-            maximo
-        );
-
-        // --------------------------------------------------
-        // CRIA SIGNAL
-        // --------------------------------------------------
 
         signal_t signal;
 
-        signal.total_length =
-            QUANTIDADE_AMOSTRAS;
+        signal.total_length = QUANTIDADE_AMOSTRAS;
 
-        signal.get_data =
-            &obter_dados_audio_estatico;
+        signal.get_data = &obter_dados_audio_estatico;
 
-        // --------------------------------------------------
-        // RESULTADO
-        // --------------------------------------------------
-
+        
         ei_impulse_result_t result = { 0 };
 
-        // --------------------------------------------------
-        // EXECUTA INFERÊNCIA
-        // --------------------------------------------------
+        // Executa inferência
 
         EI_IMPULSE_ERROR r =
             run_classifier(
@@ -215,10 +143,6 @@ void loop()
                 &result,
                 debug_nn
             );
-
-        // --------------------------------------------------
-        // ERRO
-        // --------------------------------------------------
 
         if (r != EI_IMPULSE_OK) {
 
@@ -230,10 +154,6 @@ void loop()
             continue;
         }
 
-        // --------------------------------------------------
-        // TEMPOS
-        // --------------------------------------------------
-
         ei_printf(
             "\nDSP: %d ms\n",
             result.timing.dsp
@@ -244,9 +164,7 @@ void loop()
             result.timing.classification
         );
 
-        // --------------------------------------------------
-        // RESULTADOS
-        // --------------------------------------------------
+        //Resultados
 
         ei_printf("\nRESULTADOS:\n");
 
@@ -261,10 +179,6 @@ void loop()
             );
         }
 
-        // --------------------------------------------------
-        // ANOMALIA
-        // --------------------------------------------------
-
 #if EI_CLASSIFIER_HAS_ANOMALY == 1
 
         ei_printf(
@@ -274,22 +188,13 @@ void loop()
 
 #endif
 
-        // --------------------------------------------------
-        // ESPERA
-        // --------------------------------------------------
-
         delay(5000);
     }
-
-    // ------------------------------------------------------
-    // FIM
-    // ------------------------------------------------------
 
     ei_printf("\n");
     ei_printf("====================================\n");
     ei_printf("FIM DOS TESTES\n");
     ei_printf("====================================\n");
 
-    // trava execução
     while (1);
 }

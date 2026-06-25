@@ -1,8 +1,3 @@
-// =====================================================
-// ARQUIVO GERADO AUTOMATICAMENTE
-// TinyML + MFE + Edge Impulse
-// =====================================================
-
 #ifndef AMOSTRAS_VALIDACAO_H
 #define AMOSTRAS_VALIDACAO_H
 

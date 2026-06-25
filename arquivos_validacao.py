@@ -3,10 +3,6 @@ import numpy as np
 from scipy.io import wavfile
 from scipy import signal
 
-# =========================================================
-# CONFIGURAÇÕES
-# =========================================================
-
 PASTA_AUDIOS = "C:/Users/miria/Documents/UFAL/TCC/codigos/arquivos/A2_9V/Anormal"
 
 ARQUIVO_SAIDA = "amostras_validacao.h"
@@ -19,16 +15,9 @@ AMOSTRAS_NECESSARIAS = int(TARGET_FS * WINDOW_MS / 1000)
 
 GANHO = 1.5
 
-# =========================================================
-# PROCESSAMENTO
-# =========================================================
-
 def processar_audio(caminho_arquivo):
 
-    # -----------------------------------------------------
-    # LEITURA
-    # -----------------------------------------------------
-
+    #Leitura
     fs, data = wavfile.read(caminho_arquivo)
 
     print("\n================================================")
@@ -39,29 +28,16 @@ def processar_audio(caminho_arquivo):
     print(f"Shape original: {data.shape}")
     print(f"Tipo original: {data.dtype}")
 
-    # -----------------------------------------------------
-    # MONO
-    # -----------------------------------------------------
+
 
     if len(data.shape) > 1:
         data = data.mean(axis=1)
 
-    # -----------------------------------------------------
-    # FLOAT32
-    # -----------------------------------------------------
-
     data = data.astype(np.float32)
-
-    # -----------------------------------------------------
-    # REMOVE OFFSET DC
-    # -----------------------------------------------------
 
     data = data - np.mean(data)
 
-    # -----------------------------------------------------
-    # RESAMPLE 16kHz
-    # -----------------------------------------------------
-
+    #Resample 16kHz
     if fs != TARGET_FS:
 
         novo_tamanho = int(len(data) * TARGET_FS / fs)
@@ -70,21 +46,9 @@ def processar_audio(caminho_arquivo):
 
         print(f"Resample aplicado: {fs} -> {TARGET_FS}")
 
-    # -----------------------------------------------------
-    # GANHO
-    # -----------------------------------------------------
-
     data = data * GANHO
 
-    # -----------------------------------------------------
-    # CLIPPING
-    # -----------------------------------------------------
-
     data = np.clip(data, -32768, 32767)
-
-    # -----------------------------------------------------
-    # CENTRALIZA NO PICO DE ENERGIA
-    # -----------------------------------------------------
 
     energia = np.abs(data)
 
@@ -99,10 +63,6 @@ def processar_audio(caminho_arquivo):
 
     data = data[inicio:fim]
 
-    # -----------------------------------------------------
-    # PADDING
-    # -----------------------------------------------------
-
     if len(data) < AMOSTRAS_NECESSARIAS:
 
         padding = AMOSTRAS_NECESSARIAS - len(data)
@@ -113,10 +73,6 @@ def processar_audio(caminho_arquivo):
             mode='constant'
         )
 
-    # -----------------------------------------------------
-    # DIAGNÓSTICO
-    # -----------------------------------------------------
-
     print(f"Tamanho final: {len(data)}")
 
     print(f"MAX: {np.max(data):.2f}")
@@ -124,18 +80,11 @@ def processar_audio(caminho_arquivo):
 
     print(f"Média: {np.mean(data):.4f}")
 
-    # -----------------------------------------------------
-    # INT16
-    # -----------------------------------------------------
-
     data = data.astype(np.int16)
 
     return data
 
-# =========================================================
-# PROCESSA TODOS
-# =========================================================
-
+#Processa todos os áudios
 audios_processados = []
 
 for arquivo in sorted(os.listdir(PASTA_AUDIOS)):
@@ -159,17 +108,8 @@ for arquivo in sorted(os.listdir(PASTA_AUDIOS)):
             (nome_variavel, dados)
         )
 
-# =========================================================
-# GERA HEADER
-# =========================================================
-
+#Gera header
 with open(ARQUIVO_SAIDA, "w") as f:
-
-    f.write("// =====================================================\n")
-    f.write("// ARQUIVO GERADO AUTOMATICAMENTE\n")
-    f.write("// TinyML + MFE + Edge Impulse\n")
-    f.write("// =====================================================\n\n")
-
     f.write("#ifndef AMOSTRAS_VALIDACAO_H\n")
     f.write("#define AMOSTRAS_VALIDACAO_H\n\n")
 
@@ -200,7 +140,4 @@ with open(ARQUIVO_SAIDA, "w") as f:
 
     f.write("#endif\n")
 
-print("\n========================================")
-print("HEADER GERADO COM SUCESSO")
 print(f"Total de áudios: {len(audios_processados)}")
-print("========================================")
